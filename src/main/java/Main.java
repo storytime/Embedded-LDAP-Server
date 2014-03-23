@@ -13,10 +13,8 @@ public class Main {
             File tmpDir = new File(System.getProperty(Text.CONF_SYS_TMP) + Text.CONF_APP_TMP + new Date());
             tmpDir.mkdirs();
 
-            // Create the server
             LDAPEmbeddedServer ads = new LDAPEmbeddedServer(tmpDir);
 
-            // Read an entry
             Entry result = ads.getService().getAdminSession().lookup(new Dn("cn=admin,ou=service,ou=home,dc=apache,dc=org"));
             System.out.println(Text.MSG_FOUND  + result);
 
@@ -26,6 +24,6 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
 
+    }
 }

@@ -1,4 +1,5 @@
 import org.apache.directory.api.ldap.model.entry.Entry;
+import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.name.Dn;
 import org.apache.directory.api.ldap.model.schema.SchemaManager;
 import org.apache.directory.api.ldap.model.schema.registries.SchemaLoader;
@@ -40,14 +41,9 @@ public class LDAPEmbeddedServer {
 
     /**
      * Add a new partition to the server
-     *
-     * @param partitionId The partition Id
-     * @param partitionDn The partition DN
-     * @return The newly added partition
      * @throws Exception If the partition can't be added
      */
     private Partition addPartition(String partitionId, String partitionDn) throws Exception {
-        // Create a new partition with the given partition id 
         JdbmPartition partition = new JdbmPartition(service.getSchemaManager());
         partition.setId(partitionId);
         partition.setPartitionPath(new File(service.getInstanceLayout().getPartitionsDirectory(), partitionId).toURI());
@@ -60,9 +56,6 @@ public class LDAPEmbeddedServer {
 
     /**
      * Add a new set of index on the given attributes
-     *
-     * @param partition The partition on which we want to add index
-     * @param attrs     The list of attributes to index
      */
     private void addIndex(Partition partition, String... attrs) {
         // Index some attributes on the apache partition
@@ -78,15 +71,14 @@ public class LDAPEmbeddedServer {
 
     /**
      * initialize the schema manager and add the schema partition to diectory service
-     *
      * @throws Exception if the schema LDIF files are not found on the classpath
      */
     private void initSchemaPartition() throws Exception {
-        InstanceLayout instanceLayout = service.getInstanceLayout();
 
+        InstanceLayout instanceLayout = service.getInstanceLayout();
         File schemaPartitionDirectory = new File(instanceLayout.getPartitionsDirectory(), "schema");
 
-        // Extract the schema on disk (a brand new one) and load the registries
+        // Extract the schema on disk
         if (schemaPartitionDirectory.exists()) {
             System.out.println("schema partition already exists, skipping schema extraction");
         } else {
@@ -101,8 +93,6 @@ public class LDAPEmbeddedServer {
         // to initialize the Partitions, as we won't be able to parse
         // and normalize their suffix Dn
         schemaManager.loadAllEnabled();
-
-
         List<Throwable> errors = schemaManager.getErrors();
 
         if (errors.size() != 0) {
@@ -125,18 +115,15 @@ public class LDAPEmbeddedServer {
     /**
      * Initialize the server. It creates the partition, adds the index, and
      * injects the context entries for the created partitions.
-     *
-     * @param workDir the directory to be used for storing the data
-     * @throws Exception if there were some problems while initializing the system
      */
     private void initDirectoryService(File workDir) throws Exception {
+
         // Initialize the LDAP service
         service = new DefaultDirectoryService();
         service.setInstanceLayout(new InstanceLayout(workDir));
 
         CacheService cacheService = new CacheService();
         cacheService.initialize(service.getInstanceLayout());
-
         service.setCacheService(cacheService);
 
         // first load the schema
@@ -162,78 +149,79 @@ public class LDAPEmbeddedServer {
 
         // Now we can create as many partitions as we need
         // Create some new partitions named 'foo', 'bar' and 'apache'.
-        Partition infopulsePartition = addPartition(Text.CONF_HOME_PART, "ou=home,dc=apache,dc=org");
-        Partition servicePartition = addPartition(Text.CONF_SERVICE_PART, "ou=service,ou=home,dc=apache,dc=org");
+        Partition mainPartition = addPartition(Text.CONF_HOME_PART, Text.HOME_APACHE);
+        Partition servicePartition = addPartition(Text.CONF_SERVICE_PART, Text.SRV_HOME_APACHE);
 
         // Index some attributes on the apache partition
-        addIndex(infopulsePartition, Text.CONF_OC, Text.CONF_OU, Text.CONF_UID);
+        addIndex(mainPartition, Text.CONF_OC, Text.CONF_OU, Text.CONF_UID);
         addIndex(servicePartition, Text.CONF_OC, Text.CONF_OU, Text.CONF_UID);
 
         // And start the service
         service.startup();
 
-
-        if (!service.getAdminSession().exists(infopulsePartition.getSuffixDn())) {
-            Dn dnApache = new Dn("ou=home,dc=apache,dc=org");
-            Entry entryApache = service.newEntry(dnApache);
-            entryApache.add("objectClass", "top", "domain", "extensibleObject");
-            entryApache.add("dc", "Apache");
-            service.getAdminSession().add(entryApache);
-
-            Dn user = new Dn("cn=user1@test.com,ou=home,dc=apache,dc=org");
-            Entry entryUser = service.newEntry(user);
-            entryUser.add("objectClass", "top", "organizationalPerson", "person", "inetOrgPerson");
-            entryUser.add("mail", "user1@test.com");
-            entryUser.add("uid", "user1@test.com");
-            entryUser.add("cn", "user1@test.com");
-            entryUser.add("displayName", "Directory Typical Super User");
-            entryUser.add("sn", "Typical User");
-            entryUser.add("userPassword", "qwerty");
-            service.getAdminSession().add(entryUser);
+        if (!service.getAdminSession().exists(mainPartition.getSuffixDn())) {
+            Entry homeApache = addSimpleEntry(Text.HOME_APACHE);
+            service.getAdminSession().add(homeApache);
+            Entry entryAdmin = addNewUser(Text.SRV_HOME_APACHE_USER, "user1@test.com", "user1@test.com",
+                    "user1@test.com", "LDAP Typical user", "SN User", "qwerty");
+            service.getAdminSession().add(entryAdmin);
         }
 
         if (!service.getAdminSession().exists(servicePartition.getSuffixDn())) {
-            Dn dnApache = new Dn("ou=service,ou=home,dc=apache,dc=org");
-            Entry entryApache = service.newEntry(dnApache);
-            entryApache.add("objectClass", "top", "domain", "extensibleObject");
-            entryApache.add("dc", "Apache");
+            Entry entryApache = addSimpleEntry(Text.SRV_HOME_APACHE);
             service.getAdminSession().add(entryApache);
-
-            Dn admin = new Dn("cn=admin,ou=service,ou=home,dc=apache,dc=org");
-            Entry entryAdmin = service.newEntry(admin);
-            entryAdmin.add("objectClass", "top", "organizationalPerson", "person", "inetOrgPerson");
-            entryAdmin.add("mail", "admin@test.com");
-            entryAdmin.add("uid", "admin@test.com");
-            entryAdmin.add("cn", "admin@test.com");
-            entryAdmin.add("displayName", "Directory Server Super User");
-            entryAdmin.add("sn", "Admin Muster Firma");
-            entryAdmin.add("userPassword", "qwerty");
-
+            Entry entryAdmin = addNewUser(Text.SRV_HOME_APACHE_ADMIN, "admin@test.com", "admin@test.com",
+                    "admin", "LDAP Admin", "SN Admin", "qwerty");
             service.getAdminSession().add(entryAdmin);
         }
     }
 
+    private Entry addNewUser(String dn, String email, String uid, String cn, String dsName, String sn, String password)
+            throws LdapException {
+        Dn admin = new Dn(dn);
+        Entry entryAdmin = service.newEntry(admin);
+        entryAdmin.add(Text.CONF_OC, Text.CONF_TOP, Text.CONF_ORG_PER, Text.CONF_PER, Text.CONF_INET_ORG_PER);
+        entryAdmin.add(Text.CONF_MAIL, email);
+        entryAdmin.add(Text.CONF_UID, uid);
+        entryAdmin.add(Text.CONF_CN, cn);
+        entryAdmin.add(Text.CONF_DS_NAME, dsName);
+        entryAdmin.add(Text.CONF_SN, sn);
+        if (password != null)
+            entryAdmin.add(Text.CONF_USER_PSWD, password);
+        return entryAdmin;
+    }
+
+    private Entry addSimpleEntry(String dn) throws LdapException {
+        Dn dnApache = new Dn(dn);
+        Entry entryApache = service.newEntry(dnApache);
+        entryApache.add(Text.CONF_OC, Text.CONF_TOP, Text.CONF_DOMAIN, Text.CONF_EX_OBJ);
+        entryApache.add(Text.CONF_DC, Text.TEXT_APACHE);
+        return entryApache;
+    }
 
     /**
-     * Creates a new instance of EmbeddedADS. It initializes the directory service.
-     *
-     * @throws Exception If something went wrong
+     * Initializes the directory service.
      */
     public LDAPEmbeddedServer(File workDir) throws Exception {
         initDirectoryService(workDir);
     }
 
-
     /**
      * starts the LdapServer
-     *
-     * @throws Exception
      */
     public void startServer() throws Exception {
         server = new LdapServer();
         server.setTransports(new TcpTransport(SERVER_PORT));
         server.setDirectoryService(service);
-
         server.start();
+    }
+
+
+
+    /**
+     * stop the LdapServer
+     */
+    public void stopServer() throws Exception {
+        server.stop();
     }
 }

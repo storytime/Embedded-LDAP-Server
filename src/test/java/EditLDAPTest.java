@@ -1,22 +1,28 @@
+import org.junit.Test;
+
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
 import java.util.Hashtable;
 
-public class LdapProgram {
+/**
+ * User: Bogdan
+ * Date: 3/23/14
+ * Time: 1:18 AM
+ */
+public class EditLDAPTest extends ITest {
 
-    public static void main(String[] args) {
-
+    @Test
+    public void test(){
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, "ldap://localhost:10389");
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL,"uid=admin,ou=system"); // specify the username
         env.put(Context.SECURITY_CREDENTIALS,"secret");// specify the password
-        // TODO code application logic here
 
         // entry's DN
-        String entryDN = "uid=user222,ou=system";
+        String entryDN = "uid=user222221,ou=system";
 
         // entry's attributes
 
@@ -54,4 +60,5 @@ public class LdapProgram {
             System.err.println("AddUser: error adding entry." + e);
         }
     }
+
 }
