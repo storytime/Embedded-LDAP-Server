@@ -1,3 +1,5 @@
+package com.github.storytime;
+
 import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.name.Dn;
@@ -215,8 +217,6 @@ public class LDAPEmbeddedServer {
         server.setDirectoryService(service);
         server.start();
     }
-
-
 
     /**
      * stop the LdapServer

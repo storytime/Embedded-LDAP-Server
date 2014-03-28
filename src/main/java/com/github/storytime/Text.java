@@ -1,3 +1,5 @@
+package com.github.storytime;
+
 /**
  * User: Bogdan
  * Date: 3/11/14

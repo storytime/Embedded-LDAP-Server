@@ -1,3 +1,5 @@
+package com.github.storytime;
+
 import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.name.Dn;
 
