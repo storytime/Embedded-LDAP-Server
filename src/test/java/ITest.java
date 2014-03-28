@@ -1,3 +1,5 @@
+import com.github.storytime.LDAPEmbeddedServer;
+import com.github.storytime.Text;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 

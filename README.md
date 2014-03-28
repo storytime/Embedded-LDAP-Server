@@ -1,4 +1,4 @@
-Embed-LDAP-Server
+Embedded-LDAP-Server
 =================
 
-Embed LDAP Server
+Embedded LDAP Server

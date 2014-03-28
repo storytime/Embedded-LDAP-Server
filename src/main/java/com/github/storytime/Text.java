@@ -53,5 +53,4 @@ public interface Text {
     String TEXT_STRT = "Start Server";
     String TEXT_SHT = "Stop Server";
 
-
 }

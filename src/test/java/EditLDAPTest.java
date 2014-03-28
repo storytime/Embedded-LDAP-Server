@@ -1,3 +1,5 @@
+import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.naming.Context;
@@ -10,55 +12,70 @@ import java.util.Hashtable;
  * Date: 3/23/14
  * Time: 1:18 AM
  */
+
+
 public class EditLDAPTest extends ITest {
 
     @Test
-    public void test(){
+    public void connect() throws NamingException {
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, "ldap://localhost:10389");
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(Context.SECURITY_PRINCIPAL,"uid=admin,ou=system"); // specify the username
-        env.put(Context.SECURITY_CREDENTIALS,"secret");// specify the password
+        env.put(Context.SECURITY_PRINCIPAL, "uid=admin,ou=system");
+        env.put(Context.SECURITY_CREDENTIALS, "secret");
+        DirContext context = new InitialDirContext(env);
+        Assert.assertNotNull(context);
+    }
 
-        // entry's DN
-        String entryDN = "uid=user222221,ou=system";
+    @Test(expected = Exception.class)
+    public void connectCommunicationException() throws NamingException {
+        Hashtable env = new Hashtable();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndiz.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, "ldap://localhost:00000");
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, "uid=admin,ou=system");
+        env.put(Context.SECURITY_CREDENTIALS, "qwerty");
+        DirContext context = new InitialDirContext(env);
+    }
 
-        // entry's attributes
+    @Test
+    @Ignore
+    public void test() throws NamingException {
 
-        Attribute cn = new BasicAttribute("cn", "Test User211");
-        Attribute sn = new BasicAttribute("sn", "Test2");
-        Attribute mail = new BasicAttribute("mail", "newuser@foo.com");
-        Attribute phone = new BasicAttribute("telephoneNumber", "+1 222 3334444");
-        Attribute oc = new BasicAttribute("objectClass");
-        oc.add("top");
-        oc.add("person");
-        oc.add("organizationalPerson");
-        oc.add("inetOrgPerson");
-        DirContext ctx = null;
+        Hashtable env = new Hashtable();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, "ldap://localhost:10389");
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, "uid=admin,ou=system"); // admin DN
+        env.put(Context.SECURITY_CREDENTIALS, "qwerty");// passwd
 
-        try {
-            // get a handle to an Initial DirContext
-            ctx = new InitialDirContext(env);
+        // new DN
+        String DNrecord = "uid=testUser,ou=system";
+        Attribute cn = new BasicAttribute("cn", "testUser");
+        Attribute sn = new BasicAttribute("sn", "testUser");
+        Attribute email = new BasicAttribute("mail", "test_user@example.com");
+        Attribute phone = new BasicAttribute("phone number", "123 123 123");
 
-            // build the entry
-            BasicAttributes entry = new BasicAttributes();
-            entry.put(cn);
-            entry.put(sn);
-            entry.put(mail);
-            entry.put(phone);
+        Attribute objectClass = new BasicAttribute("objectClass");
+        objectClass.add("top");
+        objectClass.add("person");
+        objectClass.add("organizationalPerson");
+        objectClass.add("inetOrgPerson");
 
-            entry.put(oc);
+        DirContext ctx = new InitialDirContext(env);
+        Assert.assertNotNull(ctx);
 
-            // Add the entry
+        BasicAttributes record = new BasicAttributes();
+        record.put(cn);
+        record.put(sn);
+        record.put(email);
+        record.put(phone);
+        record.put(objectClass);
 
-            ctx.createSubcontext(entryDN, entry);
-            //          System.out.println( "AddUser: added entry " + entryDN + ".");
+        //add record
+        ctx.createSubcontext(DNrecord, record);
 
-        } catch (NamingException e) {
-            e.printStackTrace();
-            System.err.println("AddUser: error adding entry." + e);
-        }
     }
 
 }

@@ -25,9 +25,11 @@ import org.apache.directory.server.ldap.LdapServer;
 import org.apache.directory.server.protocol.shared.transport.TcpTransport;
 
 import java.io.File;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 
 
 public class LDAPEmbeddedServer {
@@ -39,7 +41,6 @@ public class LDAPEmbeddedServer {
     public DirectoryService getService() {
         return service;
     }
-
 
     /**
      * Add a new partition to the server
@@ -69,7 +70,6 @@ public class LDAPEmbeddedServer {
 
         ((JdbmPartition) partition).setIndexedAttributes(indexedAttributes);
     }
-
 
     /**
      * initialize the schema manager and add the schema partition to diectory service
@@ -206,6 +206,17 @@ public class LDAPEmbeddedServer {
      */
     public LDAPEmbeddedServer(File workDir) throws Exception {
         initDirectoryService(workDir);
+    }
+
+
+    public LDAPEmbeddedServer()  {
+        File tmpDir = new File(System.getProperty(Text.CONF_SYS_TMP) + Text.CONF_APP_TMP + new Date());
+        tmpDir.mkdirs();
+        try {
+            initDirectoryService(tmpDir);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
