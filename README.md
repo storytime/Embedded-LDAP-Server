@@ -10,6 +10,7 @@ According to the forum thread:
 There are several reasons, why spring not working with Apache DS 1.5.
 One of them is that apacheds-all.jar is using certain version of the slf4j (pretty old version),
 so if you've already used higher version of the slf4j there's going to be dependency conflicts.
+So I try to solve this issue.
 
 
 ### Run:
