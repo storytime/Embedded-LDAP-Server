@@ -16,7 +16,7 @@ So I try to solve this issue.
 ### Run:
     mvn clean test
 
-### maven result:
+### Maven result:
     -------------------------------------------------------
      T E S T S
     -------------------------------------------------------
