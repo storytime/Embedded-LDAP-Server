@@ -72,7 +72,7 @@ So I try to solve this issue.
     [INFO] ------------------------------------------------------------------------
 
 
-<a href="https://www.flickr.com/photos/122239855@N05/13611246413" title="Embedded-LDAP-Server"><img src="https://farm3.staticflickr.com/2858/13611246413_ff31df75d2_o.png" width="906" height="915" alt="Embedded-LDAP-Server"></a>
+<a title="Embedded-LDAP-Server"><img src="https://farm3.staticflickr.com/2858/13611246413_ff31df75d2_o.png" width="906" height="915" alt="Embedded-LDAP-Server"></a>
 
 
 
